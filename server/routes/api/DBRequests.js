@@ -3,11 +3,12 @@ const router = express.Router()
 
 //Impoert the entity model
 let entity = require('../../models/entity')
+const verifyToken = require('../verifyToken')
 
 // @route   GET api/DBRequests
 // @desc    GET all entitys
 // @access  Public
-router.get('/',function(req, res){
+router.get('/',verifyToken,function(req, res){
 
     entity.find({},function(err, entitys){
         if(err){

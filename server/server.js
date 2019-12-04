@@ -1,7 +1,9 @@
 const express = require('express')
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
 
 const DBReguests = require('./routes/api/DBRequests')
+const authentication = require('./routes/authentication')
 
 const app = express()
 
@@ -16,6 +18,7 @@ mongoose
 const port = require('./config/keys').port
 
 app.use('/api', DBReguests)
+app.use('/api/login', authentication)
 
 app.listen(port, function(req, res){
     console.log(`Server started on port ${port}...`);

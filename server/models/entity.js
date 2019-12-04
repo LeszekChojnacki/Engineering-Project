@@ -58,4 +58,4 @@ let entitySchema = mongoose.Schema({
     }
 });
 
-let entity = module.exports = mongoose.model('entity',entitySchema,'statystykaludzi');
+let entity = module.exports = mongoose.model('entity',entitySchema,'COL_First');
