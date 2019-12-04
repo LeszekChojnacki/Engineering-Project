@@ -4,3 +4,4 @@ client/node_modules
 
 # Ignored in server app
 server/node_modules
+server\config\*
