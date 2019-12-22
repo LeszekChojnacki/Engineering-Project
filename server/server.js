@@ -1,6 +1,5 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const jwt = require('jsonwebtoken')
 
 const DBReguests = require('./routes/api/DBRequests')
 const authentication = require('./routes/authentication')
