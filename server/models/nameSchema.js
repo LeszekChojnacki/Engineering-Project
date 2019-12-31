@@ -49,7 +49,7 @@ module.exports.getCommunesByName = function(name, callback){
 module.exports.getProvincesByName = function(name,callback){
     nameSchema.aggregate([
         {$match:{IMIĘ:name}},
-        {$group:{_id:"$POWIAT",count:{$sum:"$LICZBA"}}}
+        {$group:{_id:"$WOJEWÓDZTWO",count:{$sum:"$LICZBA"}}}
     ],
     callback)
 }
@@ -58,7 +58,7 @@ module.exports.getProvincesByName = function(name,callback){
 module.exports.getCountiesByName = function(name, callback){
     nameSchema.aggregate([
         {$match:{IMIĘ:name}},
-        {$group:{_id:"$WOJEWÓDZTWO",count:{$sum:"$LICZBA"}}}
+        {$group:{_id:"$POWIAT",count:{$sum:"$LICZBA"}}}
     ],
     callback)
 }
