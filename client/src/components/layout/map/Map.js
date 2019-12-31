@@ -1,178 +1,189 @@
 import React, { Component } from 'react'
-import mapboxgl from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl'
 
 //Mechanics
-import {addContours} from './mapContours'
-import {addData} from './addData'
+import {importContours} from './utilities/importContours'
+import {addData} from './utilities/addData'
+import {setLegend} from './utilities/setLegend'
 
 //Components
 import Searchbar from '../search/Searchbar'
 import Tabbar from '../tabbar/Tabbar'
-
-/* 
-    Zakres markowania, ostatecznie zostanie wynioneny do osobnego pliku, 
-    a zakres będzie zmieniał się dynamicznie w zależności od otrzymanego zakresu danych
-*/
-const options = [{
-    name: 'Population',
-    description: 'Liczba wystąpień w Województwach',
-    property: 'POPULATION',
-    stops: [
-      [0, '#f8d5cc'],
-      [1, '#f4bfb6'],
-      [5, '#f1a8a5'],
-      [10, '#ee8f9a'],
-      [50, '#ec739b'],
-      [100, '#dd5ca8'],
-      [250, '#c44cc0'],
-      [500, '#9f43d7'],
-      [1000, '#6e40e6']
-    ]
-  },
-  {
-    name: 'Population',
-    description: 'Liczba wystąpień w Powiatach',
-    property: 'POPULATION',
-    stops: [
-      [0, '#f8d5cc'],
-      [1000, '#f4bfb6'],
-      [5000, '#f1a8a5'],
-      [100000, '#ee8f9a'],
-      [500000, '#ec739b'],
-      [1000000, '#dd5ca8'],
-      [2500000, '#c44cc0'],
-      [5000000, '#9f43d7'],
-      [10000000, '#6e40e6']
-    ]
-  },
-  {
-    name: 'Population',
-    description: 'Liczba wystąpień w Gminach',
-    property: 'POPULATION',
-    stops: [
-      [0, '#f8d5cc'],
-      [1000, '#f4bfb6'],
-      [5000, '#f1a8a5'],
-      [100000, '#ee8f9a'],
-      [500000, '#ec739b'],
-      [1000000, '#dd5ca8'],
-      [2500000, '#c44cc0'],
-      [5000000, '#9f43d7'],
-      [10000000, '#6e40e6']
-    ]
-  }
-]
+import Legend from '../legend/Legend'
+//import Popup from '../popup/Popup'
 
 class Map extends Component {
     
-    map;
+    map
 
     constructor(){
         super()
         this.state = {
-            active: options[0],
-            //DUMMY DB CONTENT
-            db: [
-                {
-                    "_id":"5d7b3e5590c8f97884300b82",
-                    "KOD_TERYT":201011,
-                    "WOJEWODZTWO":"DOLNOŚLĄSKIE",
-                    "POWIAT":"BOLESŁAWIECKI",
-                    "GMINA":"BOLESŁAWIEC",
-                    "OSOB":36619,
-                    "KOBIET":19712,
-                    "MEZCZYZN":16907,
-                    "PONIZEJ_18_ROKU_ZYCIA":5898,
-                    "KOBIET_PONIZEJ_18_ROKU_ZYCIA":2931,
-                    "MEZCZYZN_PONIŻEJ_18_ROKU_ZYCIA":2967,
-                    "POWYZEJ_18_ROKU_ZYCIA":30721,
-                    "KOBIET_POWYZEJ_18":16781,
-                    "MEZCZYZN_POWYZEJ_18_ROKU_ZYCIA":13940
-                },
-                {
-                    "_id":"5d7b3e5590c8f97884300b83",
-                    "KOD_TERYT":201022,
-                    "WOJEWODZTWO":"DOLNOŚLĄSKIE",
-                    "POWIAT":"BOLESŁAWIECKI",
-                    "GMINA":"BOLESŁAWIEC",
-                    "OSOB":14092,
-                    "KOBIET":7081,
-                    "MEZCZYZN":7011,
-                    "PONIZEJ_18_ROKU_ZYCIA":2772,
-                    "KOBIET_PONIZEJ_18_ROKU_ZYCIA":1345,
-                    "MEZCZYZN_PONIŻEJ_18_ROKU_ZYCIA":1427,
-                    "POWYZEJ_18_ROKU_ZYCIA":11320,
-                    "KOBIET_POWYZEJ_18":5736,
-                    "MEZCZYZN_POWYZEJ_18_ROKU_ZYCIA":5584
-                }
-            ],
-            data:null
+            active: null,
+            fetchData: null,
+            mapType: 0,
+            searchedPhrase: ''
         }
     }
 
     componentDidUpdate() {
-        this.setFill()
+        this.setMapLayer()          
     }
 
     componentDidMount() {
         
         mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN
         this.map = new mapboxgl.Map({
-        container: 'Map',
-        style: 'mapbox://styles/mapbox/streets-v9',
-        center: [16.145136, 51.919437],
-        minZoom: 0,
-        maxZoom: 9,
-        zoom: 5.7
+            container: 'Map',
+            style: 'mapbox://styles/mapbox/streets-v9',
+            center: [16.145136, 51.919437],
+            maxZoom: 13,
+            minZoom: 3,
+            zoom: 5.7,
         })
 
-        this.map.on('load', () => {
+        this.map.once('load', () => {}) 
+    }
 
-            /* 
-                Funkcja addContours w zależności od argumentu zwraca inne kontury
-                0 Województwa
-                1 Powiaty
-                2 Gminy
-            */
-            var data = addContours(2)
+    setMapLayer(){
 
-            /* 
-                Funkcja addData dokłada do GeoJSON'a konturów parametr zawierajacy 
-                wartość liczby wystąpień danego nazwiska w danym obszarze
+        if (!this.map.loaded() || this.state.searchedPhrase === '') return
 
-                (Obecnie dokładam wartość losową)
-            */
-            addData(data)
+        var contours = importContours(this.state.mapType)
+        var contoursWithData = addData(contours, this.state.mapType, this.state.searchedPhrase)
+        contoursWithData.then((data)=>{
+            var mpSource = this.map.getSource("contours")
 
-            this.map.addSource('contours', { type: 'geojson', data })
+            if (typeof mpSource === 'undefined') 
+                this.map.addSource('contours', { type: 'geojson', data })
+            else 
+                this.map.getSource("contours").setData(data)
+    
+            var mpLayer = this.map.getLayer("contours")
+    
+            if (typeof mpLayer === 'undefined') {
+                this.map.addLayer({
+                    id: 'contours',
+                    type: 'fill',
+                    source: 'contours',
+                    layout: {},
+                    paint: {
+                        'fill-opacity': [
+                            'case',
+                            ['boolean', ['feature-state', 'hover'], false],
+                            0.8,
+                            0.4
+                        ]
+                    }
+                }, 'country-label-lg')
 
-            this.map.addLayer({
-                id: 'contours',
-                type: 'fill',
-                source: 'contours',
-                paint: {
-                    'fill-opacity': 0.4
-                }
-            }, 'country-label-lg');
+                this.map.addLayer({
+                    id: 'state-borders',
+                    type: 'line',
+                    source: 'contours',
+                    layout: {},
+                    paint: {
+                        'line-color': '#c44cc0',
+                        'line-width': 0.01
+                    }
+                })
+            }
+
+            var hoveredStateId = null
         
-            this.setFill()
+            // When the user moves their mouse over the state-fill layer, we'll update the
+            // feature state for the feature under the mouse.
+            this.map.on('mousemove', 'contours', (e) => {
+                if (e.features.length > 0) {
+                    if (hoveredStateId) {
+                        this.map.setFeatureState(
+                            { source: 'contours', id: hoveredStateId },
+                            { hover: false }
+                        )
+                    }
+ 
+                    hoveredStateId = e.features[0].id
+                    this.map.setFeatureState(
+                        { source: 'contours', id: hoveredStateId },
+                        { hover: true }
+                    )
+                }
+            })
+    
+            // When the mouse leaves the state-fill layer, update the feature state of the
+            // previously hovered feature.
+            this.map.on('mouseleave', 'contours', () => {
+                if (hoveredStateId) {
+                    this.map.setFeatureState(
+                        { source: 'contours', id: hoveredStateId },
+                        { hover: false }
+                    )
+                }
+                hoveredStateId = null
+            }) 
+
+            // When the user click their mouse over the layer, we'll update the
+            this.map.on('click', 'contours', (e) => {
+
+                var popupHTML = `<Popover 
+                    style = { zIndex: 2, position: 'absolute' }
+                    anchorOrigin={{ vertical: 'center',horizontal: 'center'}}
+                    transformOrigin={{vertical: 'center',horizontal: 'center'}}
+                >
+                    ${e.features[0].id}
+                </Popover>`
+
+                if (e.features.length > 0) {
+                    new mapboxgl.Popup(
+                        {style:"zIndex: 2"},
+                        {closeButton: false, closeOnClick: true}
+                        )
+                    .setLngLat(e.lngLat)
+                    .setHTML(popupHTML)
+                    .addTo(this.map);
+                }
+            })
+
+            this.setState({
+                active: setLegend(data)
+            })
+
+            //Set fill
+            if(this.state.active == null) return 
+
+            const { property, stops } = this.state.active
+    
+            this.map.setPaintProperty('contours', 'fill-color', {
+              property,
+              stops
+            })
         })
     }
 
-    setFill() {
-        const { property, stops } = this.state.active;
-        this.map.setPaintProperty('contours', 'fill-color', {
-          property,
-          stops
-        });
+    handleChange = (newMapType) => {
+
+        if (this.state.mapType === newMapType) return
+
+        const { searchedPhrase } = this.state
+
+        if (typeof searchedPhrase === 'undefined')return
+
+        this.setState({mapType:newMapType})
+    }
+
+    handleSearch = (newSearchPhrase) => {
+
+        if (typeof newSearchPhrase === 'undefined') return
+
+        this.setState({searchedPhrase:newSearchPhrase.toUpperCase()})    
     }
 
     render(){
         return (
-            <div>
-                <div id="Map"/>
-                <Searchbar />
-                <Tabbar />
+            <div id="Map">
+                <Searchbar click={this.handleSearch.bind(this)}/>
+                <Tabbar click={this.handleChange.bind(this)}/>
+                <Legend active={this.state.active}/>
             </div>
         )
     }

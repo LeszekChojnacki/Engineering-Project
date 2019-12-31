@@ -14,7 +14,7 @@ const useStyles = makeStyles(theme => ({
     padding: '2px 4px',
     display: 'flex',
     alignItems: 'center',
-    width: 400,
+    width: 400
   },
   input: {
     marginLeft: theme.spacing(1),
@@ -24,25 +24,31 @@ const useStyles = makeStyles(theme => ({
     padding: 10,
   },
 
-}));
+}))
 
-function searchMetchod() {
-  console.log('ahoj')
-}
-
-export default function CustomizedInputBase() {
+export default function Searchbar(props) {
+  const [value, setValue] = React.useState()
   const classes = useStyles()
+  
+  const handleSearch = (event) => {
+    props.click(value)
+  }
 
   return (
+    <div>
     <Paper className={classes.root}>
       <InputBase
         className={classes.input}
         placeholder="Szukaj Nazwisk"
         inputProps={{ 'aria-label': 'search google maps' }}
+        onChange={event=>{
+          setValue(event.target.value)
+        }}
       />
-      <IconButton className={classes.iconButton} aria-label="search" onClick={searchMetchod}>
+      <IconButton className={classes.iconButton} aria-label="search" onClick={handleSearch}>
         <SearchIcon />
       </IconButton>
     </Paper>
-  );
+    </div>
+  )
 }
