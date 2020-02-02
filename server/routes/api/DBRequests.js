@@ -3,7 +3,7 @@ const router = express.Router()
 
 //Impoert the entity model
 const verifyToken = require('../verifyToken')
-let nameSchema = require('../../models/nameSchema')
+let nameSchema = require('../../db/models/nameSchema')
 
 // @route   GET api/communes/:name
 // @desc    GET entitys by name
