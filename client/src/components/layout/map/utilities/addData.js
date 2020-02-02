@@ -18,7 +18,7 @@ export async function addData(data, mapType, searchedPhrase) {
  
                         if(element.properties.JPT_KOD_JE === data.TERYT) {
 
-                            element.properties["POPULATION"] = data.LICZBA
+                            element.properties["POPULATION"] = data.NUMBER
                             return false
                         }
                         return true

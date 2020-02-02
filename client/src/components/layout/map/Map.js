@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import mapboxgl from 'mapbox-gl'
+import ReactDOM from 'react-dom'
 
 //Mechanics
 import {importContours} from './utilities/importContours'
@@ -10,7 +11,7 @@ import {setLegend} from './utilities/setLegend'
 import Searchbar from '../search/Searchbar'
 import Tabbar from '../tabbar/Tabbar'
 import Legend from '../legend/Legend'
-//import Popup from '../popup/Popup'
+import Popup from '../popup/Popup'
 
 class Map extends Component {
     
@@ -125,22 +126,18 @@ class Map extends Component {
             // When the user click their mouse over the layer, we'll update the
             this.map.on('click', 'contours', (e) => {
 
-                var popupHTML = `<Popover 
-                    style = { zIndex: 2, position: 'absolute' }
-                    anchorOrigin={{ vertical: 'center',horizontal: 'center'}}
-                    transformOrigin={{vertical: 'center',horizontal: 'center'}}
-                >
-                    ${e.features[0].id}
-                </Popover>`
-
                 if (e.features.length > 0) {
-                    new mapboxgl.Popup(
-                        {style:"zIndex: 2"},
-                        {closeButton: false, closeOnClick: true}
-                        )
-                    .setLngLat(e.lngLat)
-                    .setHTML(popupHTML)
-                    .addTo(this.map);
+                    const placeholder = document.createElement('div')
+                    ReactDOM.render(<Popup features = {e.features[0].properties} />, placeholder)
+
+                    new mapboxgl.Popup({
+                        closeButton: false, 
+                        closeOnClick: true, 
+                        offset: [50,-40]
+                        })
+                        .setDOMContent(placeholder)
+                        .setLngLat(e.lngLat)
+                        .addTo(this.map)
                 }
             })
 

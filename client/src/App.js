@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import './App.css';
+import './App.css'
 
 import Map from './components/layout/map/Map'
 
@@ -10,8 +10,8 @@ class App extends Component {
       <div className="App">
           <Map />
       </div>
-    );
+    )
   }
 }
 
-export default App;
+export default App
